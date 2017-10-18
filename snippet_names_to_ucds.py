@@ -2,7 +2,7 @@
 #https://medium.com/towards-data-science/machine-learning-nlp-text-classification-using-scikit-learn-python-and-nltk-c52b92a7c73a
 # a analogous, but more qualitative text is
 #https://medium.com/moosend-engineering-data-science/how-to-build-a-machine-learning-industry-classifier-5d19156d692f
-# 
+#
 def read_columns(config,parameter):
     '''Read and parse column names from config'''
     return [ eval(config.get(s,parameter)) for s in config.sections() ]
@@ -14,18 +14,19 @@ def read_columns_name(config):
     out = []
     for columns in name_columns:
         for i,column in enumerate(columns):
-            clean_column = re.sub('_',' ',column).strip()
-            columns[i] = clean_column
-    return name_columns
-    
+            clean_column = re.sub('[^0-9a-zA-Z\+\-\/\*\.]',' ',column).strip()
+            out.append(clean_column)
+    return out
+
 def read_columns_ucd(config):
     ucd_columns = read_columns(config,'columns_ucd')
+    out = []
     for columns in ucd_columns:
         for i,column in enumerate(columns):
             primary_ucd = column.split(';')[0]
-            columns[i] = primary_ucd
-    return ucd_columns
-    
+            out.append(primary_ucd)
+    return out
+
 
 import configparser
 config = configparser.ConfigParser()
@@ -33,6 +34,7 @@ _= config.read('CATALOGS.ini')
 
 name_columns = read_columns_name(config)
 ucd_columns = read_columns_ucd(config)
+assert len(name_columns) == len(ucd_columns)
 
 data = [ n for names in name_columns for n in names ]
 target_label = [ u for ucds in ucd_columns for u in ucds ]
@@ -96,6 +98,3 @@ clf = joblib.load('predict_svm.pkl')
 with open('targets_label-id.json','r') as fp:
     target_map = { int(k):v for k,v in json.load(fp).items() }
 predict = lambda w:target_map.get(clf.predict([w])[0])
-
-
-
