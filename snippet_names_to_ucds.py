@@ -5,7 +5,9 @@
 #
 def read_columns(config,parameter):
     '''Read and parse column names from config'''
-    return [ eval(config.get(s,parameter)) for s in config.sections() ]
+    sections = list(config.keys())
+    sections.sort()
+    return [ config[s].get(parameter) for s in sections ]
 
 
 def read_columns_name(config):
@@ -13,24 +15,28 @@ def read_columns_name(config):
     name_columns = read_columns(config,'columns_name')
     out = []
     for columns in name_columns:
+        blk = []
         for i,column in enumerate(columns):
             clean_column = re.sub('[^0-9a-zA-Z\+\-\/\*\.]',' ',column).strip()
-            out.append(clean_column)
+            blk.append(clean_column)
+        out.append(blk)
     return out
 
 def read_columns_ucd(config):
     ucd_columns = read_columns(config,'columns_ucd')
     out = []
     for columns in ucd_columns:
+        blk = []
         for i,column in enumerate(columns):
             primary_ucd = column.split(';')[0]
-            out.append(primary_ucd)
+            blk.append(primary_ucd)
+        out.append(blk)
     return out
 
 
-import configparser
-config = configparser.ConfigParser()
-_= config.read('CATALOGS.ini')
+import json
+with open('CATALOGS.ini','r') as f:
+    config = json.load(f)
 
 name_columns = read_columns_name(config)
 ucd_columns = read_columns_ucd(config)
